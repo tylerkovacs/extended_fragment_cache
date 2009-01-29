@@ -7,10 +7,10 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |s|
     s.name = "extended_fragment_cache"
-    s.summary = %Q{TODO}
+    s.summary = %Q{The extended_fragment_cache plugin provides content interpolation and an in-process memory cache for fragment caching.}
     s.email = "tyler.kovacs@gmail.com"
     s.homepage = "http://github.com/tylerkovacs/extended_fragment_cache"
-    s.description = "TODO"
+    s.description = "See README"
     s.authors = ["tylerkovacs"]
   end
 rescue LoadError

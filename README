@@ -1,9 +1,109 @@
-extended_fragment_cache
-=======================
+=ExtendedFragmentCache
 
-Description goes here.
+== About
 
-COPYRIGHT
-=========
+The extended_fragment_cache plugin provides content interpolation and an
+in-process memory cache for fragment caching.  It also integrates the
+features of Yan Pritzker's memcache_fragments plugin since they both
+operate on the same methods.
 
-Copyright (c) 2008 tylerkovacs. See LICENSE for details.
+== Installation
+
+1. This plugin requires that the memcache-client gem is installed.
+   # gem install memcache-client
+
+2. Install the plugin OR the gem
+   $ script/plugin install svn://rubyforge.org/var/svn/zventstools/projects/extended_fragment_cache
+   - OR -
+   # gem install extended_fragment_cache
+
+== In-Process Memory Cache for Fragment Caching
+
+Fragment caching has a slight inefficiency that requires two lookups
+within the fragment cache store to render a single cached fragment.
+The two cache lookups are:
+
+1. The read_fragment method invoked in a controller to determine if a
+   fragment has already been cached. e.g.,
+     unless read_fragment("/x/y/z")
+      ...
+     end
+2. The cache helper method invoked in a view that renders the fragment. e.g.,
+     <% cache("/x/y/z") do %>
+       ...
+     <% end %>
+
+This plugin adds an in-process cache that saves the value retrieved from
+the fragment cache store.  The in-process cache has two benefits:
+
+1. It cuts in half the number of read requests sent to the fragment cache
+   store.  This can result in a considerable saving for sites that make
+   heavy use of memcached.
+2. Retrieving the fragment from the in-process cache is faster than going
+   to fragment cache store.  On a typical dev box, the savings are
+   relatively small but would be noticeable in standard production
+   environment using memcached (where the fragment cache could be remote)
+
+Peter Zaitsev has a great post comparing the latencies of different
+cache types on the MySQL Performance blog:
+http://www.mysqlperformanceblog.com/2006/08/09/cache-performance-comparison/
+
+The plugin automatically installs a before_filter on the ApplicationController
+that flushes the in-process memory cache at the start of every request.
+
+== Content Interpolation for Fragment Caching
+
+Many modern websites mix a lot of static and dynamic content.  The more
+dynamic content you have in your site, the harder it becomes to implement
+caching.  In an effort to scale, you've implemented fragment caching
+all over the place.  Fragment caching can be difficult if your static content
+is interleaved with your dynamic content.  Your views become littered
+with cache calls which not only hurts performance (multiple calls to the
+cache backend), it also makes them harder to read.  Content
+interpolation allows you substitude dynamic content into cached fragment.
+
+Take this example view:
+<% cache("/first_part") do %>
+  This content is very expensive to generate, so let's fragment cache it.<br/>
+<% end %>
+<%= Time.now %><br/>
+<% cache("/second_part") do %>
+  This content is also very expensive to generate.<br/>
+<% end %>
+
+We can replace it with:
+<% cache("/only_part", {}, {"__TIME_GOES_HERE__" => Time.now}) do %>
+  This content is very expensive to generate, so let's fragment cache it.<br/>
+  __TIME_GOES_HERE__<br/>
+  This content is also very expensive to generate.<br/>
+<% end %>
+
+The latter is easier to read and induces less load on the cache backend.
+
+We use content interpolation at Zvents to speed up our JSON methods.
+Converting objects to JSON representation is notoriously slow.
+Unfortunately, in our application, each JSON request must return some unique
+data.  This makes caching tedious because 99% of the content returned is
+static for a given object, but there's a little bit of dynamic data that
+must be sent back in each response.  Using content interpolation, we cache
+the object in JSON format and substitue the dynamic values in the view.
+
+This plugin integrates Yan Pritzker's extension that allows content to be
+cached with an expiry time (from the memcache_fragments plugin) since they
+both operate on the same method.  This allows you to do things like:
+
+<% cache("/only_part", {:expire => 15.minutes}) do %>
+  This content is very expensive to generate, so let's fragment cache it.
+<% end %>
+
+== Bugs, Code and Contributing
+
+There.s a RubyForge project set up at:
+
+http://rubyforge.org/projects/zventstools/
+
+Anonymous SVN access:
+
+$ svn checkout svn://rubyforge.org/var/svn/zventstools
+
+Author: Tyler Kovacs (tyler dot kovacs at gmail dot com)
