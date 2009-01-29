@@ -13,7 +13,7 @@ operate on the same methods.
    # gem install memcache-client
 
 2. Install the plugin OR the gem
-   $ script/plugin install svn://rubyforge.org/var/svn/zventstools/projects/extended_fragment_cache
+   # ./script/plugin install git://github.com/tylerkovacs/extended_fragment_cache.git (if running recent rails)
    - OR -
    # gem install extended_fragment_cache
 
