@@ -67,7 +67,7 @@ module ActionController
         content = ApplicationController.local_fragment_cache[key]
         ApplicationController.benchmark "Fragment read: #{key}" do
           if content.nil?
-            content = ApplicationController.fragment_cache_store.read(key, options)
+            content = ActionController::Base.cache_store.read(key, options)
             ApplicationController.local_fragment_cache[key] = content
           end
         end
@@ -90,7 +90,7 @@ module ActionController
         key = self.fragment_cache_key(name)
         ApplicationController.benchmark "Cached fragment: #{key}" do
           ApplicationController.local_fragment_cache[key] = content
-          ApplicationController.fragment_cache_store.write(key, content, options)
+          ActionController::Base.cache_store.write(key, content, options)
         end
         content
       rescue NameError => err
@@ -111,11 +111,11 @@ module ActionController
 
         if key.is_a?(Regexp)
           ApplicationController.benchmark "Expired fragments matching: #{key.source}" do
-            ApplicationController.fragment_cache_store.delete_matched(key, options)
+            ActionController::Base.cache_store.delete_matched(key, options)
           end
         else
           ApplicationController.benchmark "Expired fragment: #{key}" do
-            ApplicationController.fragment_cache_store.delete(key, options)
+            ActionController::Base.cache_store.delete(key, options)
           end
         end
       rescue NameError => err
@@ -174,12 +174,12 @@ module ActionView
   module Helpers
     # See ActionController::Caching::Fragments for usage instructions.
     module CacheHelper
-      def cache(name = {}, options=nil, interpolation = {}, &block)
-        if name.nil? or (options.has_key?(:if) and !options[:if])
+      def cache(key, options={}, interpolation={}, &block)
+        if key.blank? or (options.has_key?(:if) and !options[:if])
           yield
         else
           begin
-            content = @controller.cache_erb_fragment(block, name, options, interpolation) || ""
+            content = @controller.fragment_for(output_buffer, key, options, interpolation, &block) || ""
           rescue MemCache::MemCacheError => err
             content = ""
           end
@@ -196,15 +196,13 @@ module ActionController
   module Caching
     module Fragments
       # Called by CacheHelper#cache
-      def cache_erb_fragment(block, name={}, options=nil, interpolation={})
-        unless perform_caching then 
+      def fragment_for(buffer, name={}, options=nil, interpolation={}, &block)
+        unless (perform_caching && cache_store) then
           content = block.call
           interpolation.keys.each{|k|content.sub!(k.to_s,interpolation[k].to_s)}
           content
           return
         end
-
-        buffer = eval("_erbout", block.binding)
 
         if cache = read_fragment(name, options)
           buffer.concat(cache)

@@ -2,11 +2,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{extended_fragment_cache}
-  s.version = "0.2.0"
+  s.version = "0.3.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["tylerkovacs"]
-  s.date = %q{2009-01-28}
+  s.date = %q{2009-02-11}
   s.description = %q{See README}
   s.email = %q{tyler.kovacs@gmail.com}
   s.files = ["VERSION.yml", "lib/extended_fragment_cache.rb"]
