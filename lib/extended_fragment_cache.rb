@@ -252,3 +252,5 @@ class MemCache
     end
   end
 end
+
+# ActionController::Base.send :include, ActionController::Caching::ExtendedFragments
