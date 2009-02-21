@@ -184,7 +184,7 @@ module ActionView
             content = ""
           end
 
-          interpolation.keys.each{|k| content.sub!(k.to_s, interpolation[k].to_s)}
+          interpolation.keys.each{|k| content.gsub!(k.to_s, interpolation[k].to_s)}
           content
         end
       end
@@ -199,7 +199,7 @@ module ActionController
       def fragment_for(buffer, name={}, options=nil, interpolation={}, &block)
         unless (perform_caching && cache_store) then
           content = block.call
-          interpolation.keys.each{|k|content.sub!(k.to_s,interpolation[k].to_s)}
+          interpolation.keys.each{|k|content.gsub!(k.to_s,interpolation[k].to_s)}
           content
           return
         end
@@ -211,7 +211,7 @@ module ActionController
           block.call
           write_fragment(name, buffer[pos..-1], options)
           interpolation.keys.each{|k|
-            buffer[pos..-1] = buffer[pos..-1].sub!(k.to_s,interpolation[k].to_s)
+            buffer[pos..-1] = buffer[pos..-1].gsub!(k.to_s,interpolation[k].to_s)
           }
           buffer[pos..-1]
         end

@@ -1,2 +1,4 @@
+0.3.1
+- content interpolation uses gsub! instead of sub! - all occurrences of keys are now replaced
 0.3.0
 - updated to work with Rails 2.2
