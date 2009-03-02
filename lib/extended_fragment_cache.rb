@@ -211,7 +211,7 @@ module ActionController
           block.call
           write_fragment(name, buffer[pos..-1], options)
           interpolation.keys.each{|k|
-            buffer[pos..-1] = buffer[pos..-1].gsub!(k.to_s,interpolation[k].to_s) if buffer[pos..-1].include?(k.to_s)
+            buffer[pos..-1] = buffer[pos..-1].gsub(k.to_s,interpolation[k].to_s) if buffer[pos..-1].include?(k.to_s)
           }
           buffer[pos..-1]
         end
