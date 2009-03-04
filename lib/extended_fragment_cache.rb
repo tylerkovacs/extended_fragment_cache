@@ -41,7 +41,8 @@ module ActionController
         super
         base.class_eval do
           @@local_fragment_cache = {}
-          cattr_accessor :local_fragment_cache
+          @@fragment_cache_data = nil
+          cattr_accessor :local_fragment_cache, :fragment_cache_data
         end
 
         # add an after filter to flush the local cache after every request
@@ -71,7 +72,14 @@ module ActionController
             ApplicationController.local_fragment_cache[key] = content
           end
         end
-        content
+
+        if content.is_a?(Hash)
+          ApplicationController.fragment_cache_data = content[:data]
+          content[:body]
+        else
+          ApplicationController.fragment_cache_data = nil
+          content
+        end
       rescue NameError => err
         # ignore bogus uninitialized constant ApplicationController errors
       end
@@ -88,11 +96,20 @@ module ActionController
         return unless ApplicationController.perform_caching
 
         key = self.fragment_cache_key(name)
+
+        if ApplicationController.fragment_cache_data
+          content = {
+            :data => ApplicationController.fragment_cache_data,
+            :body => content
+          }
+        end
+
         ApplicationController.benchmark "Cached fragment: #{key}" do
           ApplicationController.local_fragment_cache[key] = content
           ActionController::Base.cache_store.write(key, content, options)
         end
-        content
+
+        content.is_a?(Hash) ? content[:body] : content
       rescue NameError => err
         # ignore bogus uninitialized constant ApplicationController errors
       end

@@ -96,6 +96,21 @@ both operate on the same method.  This allows you to do things like:
   This content is very expensive to generate, so let's fragment cache it.
 <% end %>
 
+== Metadata ==
+
+Sometimes you want to store metadata alongside your cached fragments.
+Simply store a value in ApplicationController.fragment_cache_data.  When
+the fragment is served out of the cache, the value written to
+ApplicationController.fragment_cache_data within the cache block will
+be accessible after the cache block.
+
+<% cache(cache_key, {:expire => 15.minutes}) do %>
+  <% ApplicationController.fragment_cache_data = "metadata goes here" %>
+  ... cached fragment ERB ...
+<% end %>
+
+metadata was <%= ApplicationController.fragment_cache_data %>
+
 == Bugs, Code and Contributing
 
 There's a RubyForge project set up at:
